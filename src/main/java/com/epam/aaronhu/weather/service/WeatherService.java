@@ -58,8 +58,7 @@ public class WeatherService implements ApplicationRunner {
             log.info("江宁 temp is {}", op3.isPresent() ? op3.get() : null);
             op3 = getTemperature("江苏", "南京1", "溧水");
             log.info("溧水 temp is {}", op3.isPresent() ? op3.get() : null);
-            op3 = getTemperature("江苏", "南京", "江宁11");
-            log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
+
         } catch (ApiException e) {
             log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
 //            e.printStackTrace();
@@ -67,6 +66,14 @@ public class WeatherService implements ApplicationRunner {
         try {
             op3 = getTemperature("江苏", "南京", "江宁11");
             log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
+        } catch (ApiException e) {
+            log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
+//            e.printStackTrace();
+        }
+
+        try {
+            op3 = getTemperature("江苏1", "南京", "江宁");
+            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
         } catch (ApiException e) {
             log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
 //            e.printStackTrace();
