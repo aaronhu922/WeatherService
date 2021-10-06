@@ -5,6 +5,7 @@ import com.epam.aaronhu.weather.exception.ApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
@@ -26,13 +27,13 @@ public class WeatherService implements ApplicationRunner {
     private static final String COUNTRY_URL = "http://www.weather.com.cn/data/city3jdata/station/{code}.html";
     private static final String WEATHER_URL = "http://www.weather.com.cn/data/sk/{code}.html";
 
-    private AtomicInteger itemCount = new AtomicInteger();
+    RateLimiter rateLimiter = RateLimiter.create(100);
 
 
     @Autowired
     private RestTemplate restTemplate;
 
-    Map<String, String> cachedProsAndCities = new HashMap<>();
+    Map<String, String> cachedProsAndCities = new ConcurrentHashMap<>();
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -91,7 +92,9 @@ public class WeatherService implements ApplicationRunner {
 //    }
 
     public Optional<Integer> getTemperature(String province, String city, String county) throws ApiException {
-
+        if(!rateLimiter.tryAcquire(1)){
+            throw new ApiException(1005, "Requests number exceeds 100 per second, reject the request.");
+        };
         String provinceCode = getProvinceCode(province);
         log.info("provinceCode: {}", provinceCode);
         if (null == provinceCode || provinceCode.isEmpty()) throw new ApiException(1001, "Invalid province name!");
@@ -105,7 +108,8 @@ public class WeatherService implements ApplicationRunner {
         if (null == countyCode || countyCode.isEmpty()) throw new ApiException(1003, "Invalid county name!");
         String code = provinceCode + cityCode + countyCode;
         log.info("code: {}", code);
-        return getTemperature(code);
+        Optional<Integer> res = getTemperature(code);
+        return res;
     }
 
     public String getProvinceCode(String province) {
