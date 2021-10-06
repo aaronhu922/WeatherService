@@ -1,4 +1,4 @@
-package com.epam.aaronhu.weather.support;
+package com.epam.aaronhu.weather.exception;
 
 import lombok.Getter;
 

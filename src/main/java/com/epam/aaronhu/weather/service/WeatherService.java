@@ -1,7 +1,7 @@
 package com.epam.aaronhu.weather.service;
 
 import com.epam.aaronhu.weather.model.*;
-import com.epam.aaronhu.weather.support.ApiException;
+import com.epam.aaronhu.weather.exception.ApiException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,16 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 @Slf4j
@@ -28,6 +25,9 @@ public class WeatherService implements ApplicationRunner {
     private static final String CITY_URL = "http://www.weather.com.cn/data/city3jdata/provshi/{code}.html";
     private static final String COUNTRY_URL = "http://www.weather.com.cn/data/city3jdata/station/{code}.html";
     private static final String WEATHER_URL = "http://www.weather.com.cn/data/sk/{code}.html";
+
+    private AtomicInteger itemCount = new AtomicInteger();
+
 
     @Autowired
     private RestTemplate restTemplate;
@@ -60,30 +60,38 @@ public class WeatherService implements ApplicationRunner {
             log.info("溧水 temp is {}", op3.isPresent() ? op3.get() : null);
 
         } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
-//            e.printStackTrace();
+            log.error("Error code {}, and message {}", e.getCode(), e);
         }
         try {
             op3 = getTemperature("江苏", "南京", "江宁11");
             log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
         } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
-//            e.printStackTrace();
+            log.error("Error code {}, and message {}", e.getCode(), e);
         }
 
         try {
             op3 = getTemperature("江苏1", "南京", "江宁");
             log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
         } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e.getMessage());
-//            e.printStackTrace();
+            log.error("Error code {}, and message {}", e.getCode(), e);
         }
+
+        try {
+            op3 = getTemperature("1212212");
+            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
+        } catch (ApiException e) {
+            log.error("Error code {}, and message {}", e.getCode(), e);
+        }
+
+        queryCodeByName("retrytest", "http://localhost:8111/{code}");
+
     }
 
 //    private void initCache() {
 //    }
 
     public Optional<Integer> getTemperature(String province, String city, String county) throws ApiException {
+
         String provinceCode = getProvinceCode(province);
         log.info("provinceCode: {}", provinceCode);
         if (null == provinceCode || provinceCode.isEmpty()) throw new ApiException(1001, "Invalid province name!");
@@ -127,7 +135,7 @@ public class WeatherService implements ApplicationRunner {
         ResponseEntity<String> response = restTemplate
                 .exchange(WEATHER_URL, HttpMethod.GET, null, String.class, countyCode);
         String body = response.getBody();
-        log.info("response status: {}, content: {}", response.getStatusCode(), body);
+//        log.info("response status: {}, content: {}", response.getStatusCode(), body);
         try {
             Map<String, Weatherinfo> map = new ObjectMapper().readValue(body, new TypeReference<HashMap<String, Weatherinfo>>() {
             });
@@ -135,7 +143,7 @@ public class WeatherService implements ApplicationRunner {
             log.info("Weather: {}", temp);
             return Optional.ofNullable(Math.round(Float.parseFloat(temp)));
         } catch (JsonProcessingException | NumberFormatException e) {
-            log.error("Unexpected return value when to get temp with code {}, error message is: {}", countyCode, e.getMessage());
+            log.error("Unexpected return value when to get temp with code {}, error message is: {}", countyCode, e);
             throw new ApiException(1004, "Failed to get temperature with county code " + countyCode);
         }
     }
@@ -157,7 +165,7 @@ public class WeatherService implements ApplicationRunner {
                 .exchange(url, HttpMethod.GET, null, String.class, code);
 
         String body = response.getBody();
-        log.info("response status: {}, content: {}", response.getStatusCode(), body);
+//        log.info("response status: {}, content: {}", response.getStatusCode(), body);
         try {
             Map<String, String> map = new ObjectMapper().readValue(body, new TypeReference<HashMap<String, String>>() {
             });
