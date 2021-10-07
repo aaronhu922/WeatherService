@@ -31,7 +31,7 @@ public class WeatherService implements ApplicationRunner {
 
     RateLimiter rateLimiter = RateLimiter.create(rate);
 
-    public void setRateLimiter(RateLimiter rateLimiter){
+    public void setRateLimiter(RateLimiter rateLimiter) {
         this.rateLimiter = rateLimiter;
     }
 
@@ -44,54 +44,7 @@ public class WeatherService implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         //TODO: Load all the county code into cache. eg, {"江苏南京江宁":"101190104"}
-        //it can reject the attack with false name.
         //initCache();
-//        queryProvince();
-//        String jiangsu = getProvinceCode("江苏");
-//        log.info("jiangsu code is {}.", jiangsu);
-//        log.info("null code is {}.", null==jiangsu);
-//        String suzhou = getCityCode(jiangsu, "南京");
-//        log.info("city: {}", suzhou);
-//        String county = getCountyCode(jiangsu + suzhou, "江宁");
-//        log.info("county: {}", jiangsu + suzhou + county);
-//        Optional<Integer> op = getTemperature(jiangsu + suzhou + county);
-//        log.info("final temp is {}", op.get());
-//        String lishui = getCountyCode(jiangsu + suzhou, "溧水");
-//        Optional<Integer> op2 = getTemperature(jiangsu + suzhou + lishui);
-//        log.info("lishui temp is {}", op2.get());
-//        Optional<Integer> op3;
-//        try {
-//            op3 = getTemperature("江苏", "南京", "江宁");
-//            log.info("江宁 temp is {}", op3.isPresent() ? op3.get() : null);
-//            op3 = getTemperature("江苏", "南京1", "溧水");
-//            log.info("溧水 temp is {}", op3.isPresent() ? op3.get() : null);
-//
-//        } catch (ApiException e) {
-//            log.error("Error code {}, and message {}", e.getCode(), e);
-//        }
-//        try {
-//            op3 = getTemperature("江苏", "南京", "江宁11");
-//            log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
-//        } catch (ApiException e) {
-//            log.error("Error code {}, and message {}", e.getCode(), e);
-//        }
-//
-//        try {
-//            op3 = getTemperature("江苏1", "南京", "江宁");
-//            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
-//        } catch (ApiException e) {
-//            log.error("Error code {}, and message {}", e.getCode(), e);
-//        }
-//
-//        try {
-//            op3 = getTemperature("1212212");
-//            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
-//        } catch (ApiException e) {
-//            log.error("Error code {}, and message {}", e.getCode(), e);
-//        }
-//
-//        queryCodeByName("retrytest", "http://localhost:8111/{code}");
-
     }
 
 //    private void initCache() {
@@ -99,7 +52,7 @@ public class WeatherService implements ApplicationRunner {
 
     public Optional<Integer> getTemperature(String province, String city, String county) throws ApiException {
         if (!rateLimiter.tryAcquire(1)) {
-            throw new ApiException(1005, "Requests number exceeds "+rateLimiter.getRate()+" per second, reject the request.");
+            throw new ApiException(1005, "Requests number exceeds " + rateLimiter.getRate() + " per second, reject the request.");
         }
         // Mock the delay for rate limit testing.
 //        try {
@@ -181,7 +134,7 @@ public class WeatherService implements ApplicationRunner {
                 .exchange(url, HttpMethod.GET, null, String.class, code);
 
         String body = response.getBody();
-        log.info("response status: {}, content: {}", response.getStatusCode(), body);
+//        log.info("response status: {}, content: {}", response.getStatusCode(), body);
         try {
             Map<String, String> map = new ObjectMapper().readValue(body, new TypeReference<HashMap<String, String>>() {
             });
