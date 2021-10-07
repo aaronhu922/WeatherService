@@ -69,7 +69,7 @@ public class WeatherServiceApplication {
 	private static HttpRequestRetryHandler retryHandler(){
 		return (exception, executionCount, context) -> {
 
-			log.info("try request: {}", executionCount);
+			log.info("try to send request: {} time(s).", executionCount);
 
 			if (executionCount >= 3) {
 				// Do not retry if over max retry count

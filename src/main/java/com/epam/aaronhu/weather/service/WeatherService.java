@@ -27,7 +27,13 @@ public class WeatherService implements ApplicationRunner {
     private static final String COUNTRY_URL = "http://www.weather.com.cn/data/city3jdata/station/{code}.html";
     private static final String WEATHER_URL = "http://www.weather.com.cn/data/sk/{code}.html";
 
-    RateLimiter rateLimiter = RateLimiter.create(100);
+    private int rate = 100;
+
+    RateLimiter rateLimiter = RateLimiter.create(rate);
+
+    public void setRateLimiter(RateLimiter rateLimiter){
+        this.rateLimiter = rateLimiter;
+    }
 
 
     @Autowired
@@ -53,38 +59,38 @@ public class WeatherService implements ApplicationRunner {
 //        String lishui = getCountyCode(jiangsu + suzhou, "溧水");
 //        Optional<Integer> op2 = getTemperature(jiangsu + suzhou + lishui);
 //        log.info("lishui temp is {}", op2.get());
-        Optional<Integer> op3;
-        try {
-            op3 = getTemperature("江苏", "南京", "江宁");
-            log.info("江宁 temp is {}", op3.isPresent() ? op3.get() : null);
-            op3 = getTemperature("江苏", "南京1", "溧水");
-            log.info("溧水 temp is {}", op3.isPresent() ? op3.get() : null);
-
-        } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e);
-        }
-        try {
-            op3 = getTemperature("江苏", "南京", "江宁11");
-            log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
-        } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e);
-        }
-
-        try {
-            op3 = getTemperature("江苏1", "南京", "江宁");
-            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
-        } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e);
-        }
-
-        try {
-            op3 = getTemperature("1212212");
-            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
-        } catch (ApiException e) {
-            log.error("Error code {}, and message {}", e.getCode(), e);
-        }
-
-        queryCodeByName("retrytest", "http://localhost:8111/{code}");
+//        Optional<Integer> op3;
+//        try {
+//            op3 = getTemperature("江苏", "南京", "江宁");
+//            log.info("江宁 temp is {}", op3.isPresent() ? op3.get() : null);
+//            op3 = getTemperature("江苏", "南京1", "溧水");
+//            log.info("溧水 temp is {}", op3.isPresent() ? op3.get() : null);
+//
+//        } catch (ApiException e) {
+//            log.error("Error code {}, and message {}", e.getCode(), e);
+//        }
+//        try {
+//            op3 = getTemperature("江苏", "南京", "江宁11");
+//            log.info("江宁11 temp is {}", op3.isPresent() ? op3.get() : null);
+//        } catch (ApiException e) {
+//            log.error("Error code {}, and message {}", e.getCode(), e);
+//        }
+//
+//        try {
+//            op3 = getTemperature("江苏1", "南京", "江宁");
+//            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
+//        } catch (ApiException e) {
+//            log.error("Error code {}, and message {}", e.getCode(), e);
+//        }
+//
+//        try {
+//            op3 = getTemperature("1212212");
+//            log.info("江苏1 temp is {}", op3.isPresent() ? op3.get() : null);
+//        } catch (ApiException e) {
+//            log.error("Error code {}, and message {}", e.getCode(), e);
+//        }
+//
+//        queryCodeByName("retrytest", "http://localhost:8111/{code}");
 
     }
 
@@ -92,9 +98,15 @@ public class WeatherService implements ApplicationRunner {
 //    }
 
     public Optional<Integer> getTemperature(String province, String city, String county) throws ApiException {
-        if(!rateLimiter.tryAcquire(1)){
-            throw new ApiException(1005, "Requests number exceeds 100 per second, reject the request.");
-        };
+        if (!rateLimiter.tryAcquire(1)) {
+            throw new ApiException(1005, "Requests number exceeds "+rateLimiter.getRate()+" per second, reject the request.");
+        }
+        // Mock the delay for rate limit testing.
+//        try {
+//            Thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         String provinceCode = getProvinceCode(province);
         log.info("provinceCode: {}", provinceCode);
         if (null == provinceCode || provinceCode.isEmpty()) throw new ApiException(1001, "Invalid province name!");
@@ -164,19 +176,19 @@ public class WeatherService implements ApplicationRunner {
         queryCodeByName(code, COUNTRY_URL);
     }
 
-    private void queryCodeByName(String code, String url) {
+    protected void queryCodeByName(String code, String url) {
         ResponseEntity<String> response = restTemplate
                 .exchange(url, HttpMethod.GET, null, String.class, code);
 
         String body = response.getBody();
-//        log.info("response status: {}, content: {}", response.getStatusCode(), body);
+        log.info("response status: {}, content: {}", response.getStatusCode(), body);
         try {
             Map<String, String> map = new ObjectMapper().readValue(body, new TypeReference<HashMap<String, String>>() {
             });
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 cachedProsAndCities.put(code + entry.getValue(), entry.getKey());
             }
-            log.info("response: {}", cachedProsAndCities);
+//            log.info("response: {}", cachedProsAndCities);
         } catch (JsonProcessingException e) {
             log.error("Unexpected return value when to get {} with param {}", url, code);
         }
