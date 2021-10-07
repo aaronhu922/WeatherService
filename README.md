@@ -16,7 +16,14 @@ Weather service example for Epam.
 public Optional<Integer> getTemperature(String province, String city, String county) {
 }
 ```
-
+### Error Code
+|code| message|
+| --- | --------- |
+|1001|	Invalid province name!|
+|1002|	Invalid city name!|
+|1003|	Invalid county name!|
+|1004|	Failed to get temperature with {county code}!|
+|1005|	Requests number exceeds rate limit!|
 
 ### Build
 
