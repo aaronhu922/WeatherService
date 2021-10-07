@@ -43,6 +43,7 @@ Or by mvn commands.
 
 ## TODO:
 * Init all the county code into cache. It can get the code from cache, no need to query from remote every time.
+It can avoid the attacks with invalid names. 
 ```
 {
 "江苏南京江宁":"101190104"
